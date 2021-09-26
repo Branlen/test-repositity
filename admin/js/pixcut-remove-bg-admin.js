@@ -82,7 +82,7 @@
             processing = false;
           } else {
             if (currentProcessing > 0) {
-              $(".button-click").removeClass("d-none");
+              $(".pixcut-button-click").removeClass("d-none");
               $(".block-count span").html(currentProcessing);
             }
             // $(".RemoveBG_Background_img").attr("src", "").css("display", "none");
@@ -231,9 +231,9 @@
               }
               if (process == "save") {
                 if ($('input[name="Pixcut_RemoveBG_ApiKey"]').val() != "") {
-                  $("#apiwarning").hide();
+                  $("#appkeyWarning").hide();
                 } else {
-                  $("#apiwarning").show();
+                  $("#appkeyWarning").show();
                 }
                 $("html, body").animate({ scrollTop: 0 }, "slow");
                 $("#status_s").show();
@@ -255,7 +255,7 @@
       }
     });
 
-    $(".button-click").on("click", function (e) {
+    $(".pixcut-button-click").on("click", function (e) {
       $(".pixcut_remove_bg.notice").hide();
     });
 
@@ -275,7 +275,7 @@
         url: ajaxurl,
         data: {
           action: "Pixcut_User_Aborted",
-          RemoveBG_ID: $(".pixcut_remove_bg-process-stop").attr("data-id"),
+          Pixcut_RemoveBG_ID: $(".pixcut_remove_bg-process-stop").attr("data-id") || 0,
           _nonce: $("#_wpnonce").val(),
           schk: $("input#schk").val(),
         },
@@ -303,7 +303,7 @@
       });
     });
 
-    $("#restore_backup").on("click", function (e) {
+    $("#pixcut_restore_backup").on("click", function (e) {
       e.preventDefault();
       showModel($("#restore_backup_confirm").val(), function () {
         $("#loader").show();
@@ -332,7 +332,7 @@
               $("#status_restore_w").hide();
               $(".block-count").hide();
               $("#status_restore_d").show();
-              $(".button-click").addClass("d-none");
+              $(".pixcut-button-click").addClass("d-none");
             }
             $("#loader").hide();
             $("p.submit").show();
@@ -348,7 +348,7 @@
       });
     });
 
-    $("#delete_backup").on("click", function (e) {
+    $("#pixcut_delete_backup").on("click", function (e) {
       e.preventDefault();
       showModel($("#delete_backup_confirm").val(), function () {
         $("#loader").show();
@@ -373,7 +373,7 @@
               $("#status_restore_e").show();
               $("#status_restore_e p").text(data.msg);
             } else {
-              $(".button-click").addClass("d-none");
+              $(".pixcut-button-click").addClass("d-none");
               $(".block-count").hide();
               $("#status_restore_w").hide();
               $("#status_d").show();
@@ -392,11 +392,16 @@
         });
       });
     });
+    $("#buyCredits").on("click", function (e) {
+      e.preventDefault();
+      window.open("https://pixcut.wondershare.com/pricing.html", "_blank");
+    });
 
-    $("#startpreview").on("click", function (e) {
+    $("#start_preview").on("click", function (e) {
       e.preventDefault();
       $("#loader").show();
       $("p.submit").hide();
+      $("#previewresult").hide();
       $(".pixcut_remove_bg.notice").hide();
 
       var form_data = new FormData();
@@ -424,7 +429,7 @@
           } else {
             $(".img-after-remove-bg").attr("src", data.file_after);
             $(".img-before-remove-bg").attr("src", data.file_before);
-            $("#previewresult").show();
+            $("#previewresult").css("display", "flex");
             $('input[name="Pixcut_RemoveBG_TestProduct"]').val("");
           }
 
@@ -445,8 +450,8 @@
     var products_inp = document.getElementsByName("Pixcut_RemoveBG_products_IDs")[0];
     for (var i = 0; i < products.length; i++) {
       products[i].addEventListener("change", function () {
-        if (this.value == "specified") products_inp.style.visibility = "visible";
-        else products_inp.style.visibility = "hidden";
+        if (this.value == "specified") products_inp.removeAttribute("disabled");
+        else products_inp.setAttribute("disabled", "disabled");
       });
     }
   });
@@ -454,7 +459,7 @@
     $("#model").show();
     $("#modelDesc").text(desc);
     if (confirmCallback) {
-        console.log($(".model-action .btn")[0].css);
+      console.log($(".model-action .btn")[0].css);
       $("#cancelAction").css("display", "block");
     }
     $(".model-action .btn")[0].addEventListener("click", function () {

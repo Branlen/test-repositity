@@ -615,7 +615,7 @@ class Pixcut_Remove_BG_Admin
 
 			$wp_upload_dir = wp_upload_dir();
 
-			$fileData = pathinfo($filePATHFull);//待处理图片文件内容
+			$fileData = pathinfo($filePATHFull); //待处理图片文件内容
 
 			$tmp_dir  = $wp_upload_dir['basedir'] . '/pixcut-remove-bg-tmp-dir';
 			if (!file_exists($tmp_dir)) {
@@ -835,7 +835,7 @@ class Pixcut_Remove_BG_Admin
 	{
 		global $wpdb;
 		if (wp_verify_nonce(sanitize_text_field($_POST['_nonce']), 'update-options')  && user_can(intval($_POST['schk']), 'edit_pages')) {
-			$remove_bg_id = trim(intval($_POST['RemoveBG_ID']));
+			$remove_bg_id = trim(intval($_POST['Pixcut_RemoveBG_ID']));
 			try {
 				$wpdb->update(
 					$wpdb->prefix . "wc_pixcut_remove_bg",
@@ -1038,7 +1038,7 @@ class Pixcut_Remove_BG_Admin
 		if (!file_exists($log_file_dir)) {
 			mkdir($log_file_dir, 0755, true);
 		}
-		$RemoveBG_ApiKey = get_option('RemoveBG_ApiKey');
+		$RemoveBG_ApiKey = get_option('Pixcut_RemoveBG_ApiKey');
 		if (!empty($RemoveBG_ApiKey)) {
 			$RemoveBG_ApiKey = substr_replace($RemoveBG_ApiKey, '******************', 3, 18);
 		}
@@ -1049,28 +1049,28 @@ class Pixcut_Remove_BG_Admin
 		$row .= "\n";
 		$row .= 'Choose target products: ';
 		$row .= "\n";
-		if ('all' == get_option('RemoveBG_products')) {
+		if ('all' == get_option('Pixcut_RemoveBG_products')) {
 			$row .= 'Remove background from all products';
 			$row .= "\n";
-		} elseif ('specified' == get_option('RemoveBG_products')) {
+		} elseif ('specified' == get_option('Pixcut_RemoveBG_products')) {
 			$row .= 'Remove background only from specified products';
 			$row .= "\n";
-			$row .= '(' . get_option('RemoveBG_products_IDs') . ')';
+			$row .= '(' . get_option('Pixcut_RemoveBG_products_IDs') . ')';
 			$row .= "\n";
 		}
 		$row .= "\n";
 		$row .= 'Choose target images: ';
 		$row .= "\n";
-		if (get_option('RemoveBG_thumbnail')) {
+		if (get_option('Pixcut_RemoveBG_thumbnail')) {
 			$row .= 'Main image';
 			$row .= "\n";
 		}
-		if (get_option('RemoveBG_gallery')) {
+		if (get_option('Pixcut_RemoveBG_gallery')) {
 			$row .= 'Product gallery';
 			$row .= "\n";
 		}
 		$row .= "\n";
-		if (get_option('RemoveBG_Include_Processed')) {
+		if (get_option('Pixcut_RemoveBG_Include_Processed')) {
 			$row .= 'Include processed images';
 			$row .= "\n";
 		}
@@ -1113,7 +1113,7 @@ class Pixcut_Remove_BG_Admin
 		if (!file_exists($log_file_dir)) {
 			mkdir($log_file_dir, 0755, true);
 		}
-		$row = "Image " . intval($_POST['RemoveBG_CountProcessImage']) . " already processed. Skipping." . "\n";
+		$row = "Image " . intval($_POST['Pixcut_RemoveBG_CountProcessImage']) . " already processed. Skipping." . "\n";
 		$fp  = fopen($log_file_dir . '/log.txt', "a");
 		fwrite($fp, $row);
 		fclose($fp);
@@ -1126,7 +1126,7 @@ class Pixcut_Remove_BG_Admin
 		if (!file_exists($log_file_dir)) {
 			mkdir($log_file_dir, 0755, true);
 		}
-		$row = "Backed up " . intval($_POST['RemoveBG_CountProcessImage']) . " images\n";
+		$row = "Backed up " . intval($_POST['Pixcut_RemoveBG_CountProcessImage']) . " images\n";
 		$fp  = fopen($log_file_dir . '/log.txt', "a");
 		fwrite($fp, $row);
 		fclose($fp);
