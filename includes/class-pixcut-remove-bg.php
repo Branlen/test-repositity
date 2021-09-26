@@ -158,11 +158,11 @@ class Pixcut_Remove_BG {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_pixcut_scripts' );
         $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_menu_remove_bg' );
 		$this->loader->add_action( 'admin_notices', $plugin_admin, 'Pixcut_Remove_BG_admin_notice' );
-		$this->loader->add_action( 'wp_ajax_Remove_BG_processing', $plugin_admin, 'Pixcut_Remove_BG_processing' );
-        $this->loader->add_action( 'wp_ajax_Remove_BG_Restore_Backup', $plugin_admin, 'Pixcut_Remove_BG_Restore_Backup' );
-		$this->loader->add_action( 'wp_ajax_Delete_backup', $plugin_admin, 'Pixcut_Delete_backup' );
-		$this->loader->add_action( 'wp_ajax_Preview_BG_Images', $plugin_admin, 'Pixcut_Preview_BG_Images' );
-		$this->loader->add_action( 'wp_ajax_User_Aborted', $plugin_admin, 'Pixcut_User_Aborted' );
+		$this->loader->add_action( 'wp_ajax_Pixcut_Remove_BG_processing', $plugin_admin, 'Pixcut_Remove_BG_processing' );
+        $this->loader->add_action( 'wp_ajax_Pixcut_Remove_BG_Restore_Backup', $plugin_admin, 'Pixcut_Remove_BG_Restore_Backup' );
+		$this->loader->add_action( 'wp_ajax_Pixcut_Delete_backup', $plugin_admin, 'Pixcut_Delete_backup' );
+		$this->loader->add_action( 'wp_ajax_Pixcut_Preview_BG_Images', $plugin_admin, 'Pixcut_Preview_BG_Images' );
+		$this->loader->add_action( 'wp_ajax_Pixcut_User_Aborted', $plugin_admin, 'Pixcut_User_Aborted' );
 
 	}
 
