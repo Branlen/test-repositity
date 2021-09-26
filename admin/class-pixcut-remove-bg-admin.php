@@ -161,7 +161,7 @@ class Pixcut_Remove_BG_Admin
 									require_once ABSPATH . 'wp-admin/includes/file.php';
 									require_once ABSPATH . 'wp-admin/includes/media.php';
 									wp_delete_attachment(get_option('Pixcut_RemoveBG_Background_Image'), true);
-									$attachment_id = media_handle_upload('RemoveBG_file', 0);
+									$attachment_id = media_handle_upload('Pixcut_RemoveBG_file', 0);
 									update_option('Pixcut_RemoveBG_Background_Image', $attachment_id);
 									$background_image = wp_get_attachment_image_url($attachment_id, 'medium');
 								}
