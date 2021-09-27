@@ -19,7 +19,7 @@
   /* Position the tooltip */
   position: absolute;
   z-index: 1;
-  top: 102%;
+  top: 120%;
   left: 50%;
   margin-left: -130px;
 }
@@ -41,9 +41,7 @@
   font-size: 12px;
   color: #878787;
 }
-.fit_fill {
-  padding: 10px 0 0 10px;
-}
+
 .submit .start {
   background-color: #009f16;
   border-color: #008212;

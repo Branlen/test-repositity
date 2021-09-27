@@ -89,7 +89,7 @@ class Pixcut_Remove_BG_Admin
 		add_menu_page(__('Pixcut Remove BG', 'pixcut-remove-bg'), __('Pixcut Remove BG', 'pixcut-remove-bg'), 'edit_pages', 'pixcut_remove_bg', array(
 			$this,
 			'show_remove_bg'
-		), 'dashicons-format-image');
+		), 'dashicons-format-gallery');
 	}
 
 	public function show_remove_bg()
@@ -129,7 +129,7 @@ class Pixcut_Remove_BG_Admin
 					$wpdb->prefix . "wc_pixcut_remove_bg",
 					array(
 						'date_start' => date('Y-m-d H:i:s'),
-						'status'     => 's'
+						'status'     => 'start'
 					),
 					array(
 						'%s',
@@ -186,7 +186,7 @@ class Pixcut_Remove_BG_Admin
 								$wpdb->prefix . "wc_pixcut_remove_bg",
 								array(
 									'date_end' => date('Y-m-d H:i:s'),
-									'status'   => 'e'
+									'status'   => 'error'
 								),
 								array(
 									'ID' => $remove_bg_id
@@ -338,7 +338,7 @@ class Pixcut_Remove_BG_Admin
 								echo json_encode(array(
 									'hasErrors'   => false,
 									'processing'  => false,
-									'status'      => 'r',
+									'status'      => 'ready',
 									'success_msg' => sprintf(_n('Processed %d images of %d', 'Processed %d images of %d', intval($_POST['Pixcut_RemoveBG_CountProcessImage']), intval($_POST['Pixcut_RemoveBG_AllCountImage'])), number_format_i18n(intval($_POST['Pixcut_RemoveBG_CountProcessImage'])), number_format_i18n(intval($_POST['Pixcut_RemoveBG_AllCountImage'])))
 								));
 							} else {
@@ -412,7 +412,7 @@ class Pixcut_Remove_BG_Admin
 							$wpdb->prefix . "wc_pixcut_remove_bg",
 							array(
 								'date_end' => date('Y-m-d H:i:s'),
-								'status'   => 'f',
+								'status'   => 'finish',
 							),
 							array(
 								'ID' => $remove_bg_id
@@ -436,7 +436,7 @@ class Pixcut_Remove_BG_Admin
 			echo json_encode(array(
 				'hasErrors'  => true,
 				'processing' => false,
-				'status'     => 'e',
+				'status'     => 'error',
 				'error_msg'  => __('Security check failed', 'pixcut-remove-bg')
 			));
 		}
@@ -553,7 +553,7 @@ class Pixcut_Remove_BG_Admin
 					$errors_msg = '';
 					if (!empty($new_img_id['errors_msg'])) {
 						foreach ($new_img_id['errors_msg'] as $err) {
-							$errors_msg .= $err['title'] . ' ';
+							$errors_msg .= $err['title'];
 						}
 					}
 					return $errors_msg;
@@ -629,31 +629,59 @@ class Pixcut_Remove_BG_Admin
 				$er['errors_msg'][0]['title'] = __('Check available disk space or check uploads (or pixcut-remove-bg-tmp-dir) folder permissions', 'pixcut-remove-bg');
 				return $er;
 			}
-
-			$body = [];
-			$body = [
-				'multipart' => [
-					[
-						'name'     => 'content',
-						'contents' => file_get_contents($tmp_img)
-					]
-				]
-			];
+			$post_fields = array(
+				'type' => 'wordpress',
+			);
 			if (get_option('Pixcut_RemoveBG_Background') == 'color') {
-				$body['bg_color'] = get_option('Pixcut_RemoveBG_Background_Color');
+				$post_fields['bg_color'] = get_option('Pixcut_RemoveBG_Background_Color');
 			}
-			// if ( get_option( 'Pixcut_RemoveBG_Background' ) == 'image' ) {
-			// 	$filePATHFull_bg       = wp_get_attachment_url( get_option('Pixcut_RemoveBG_Background_Image') );
-			// 	$body['bg_image_url'] = $filePATHFull_bg;
-			// }
 
-			$argRemotePost = [
-				'body' => $body,
-				'headers' => ['appkey' => $Remove_BG_api_key]
-			];
 
-			$response = wp_remote_post('https://pixcut.wondershare.com/openapi/api/v1/matting/removebg', $argRemotePost);
+			$boundary = 'WebKitFormBoundarymaBh18Z6h2fKXmMK';
+			$headers  = array(
+				'appkey' => $Remove_BG_api_key,
+				'Content-Type' => 'multipart/form-data; boundary=----' . $boundary,
+			);
+			$payload = '';
+			// First, add the standard POST fields:
+			foreach ($post_fields as $name => $value) {
+				$payload .= '------' . $boundary;
+				$payload .= "\r\n";
+				$payload .= 'Content-Disposition: form-data; name="' . $name .
+					'"' . "\r\n\r\n";
+				$payload .= $value;
+				$payload .= "\r\n";
+			}
+			// Upload the file
+			if ($tmp_img) {
+				$payload .= '------' . $boundary;
+				$payload .= "\r\n";
+				$payload .= 'Content-Disposition: form-data; name="' . 'content' .
+					'"; filename="' . basename($tmp_img) . '"' . "\r\n";
+				$payload .= 'Content-Type: image/png' . "\r\n";
+				$payload .= "\r\n";
+				$payload .= file_get_contents($tmp_img);
+				$payload .= "\r\n";
+			}
+			$payload .= '------' . $boundary . '--';
+			$response = wp_remote_post(
+				'https://pixcut.wondershare.com/openapi/api/v1/matting/removebg',
+				array(
+					'headers'    => $headers,
+					'body'       => $payload,
+					'timeout'=> 3*60
+				)
+			);
 
+
+			// $response = wp_remote_post('https://pixcut.wondershare.com/openapi/api/v1/matting/removebg', array(
+			// 	'method' => 'POST',
+			// 	'headers' => array('Content-Type' => 'multipart/form-data', 'appkey' => $Remove_BG_api_key),
+			// 	'body' => array(
+			// 		'content' => file_get_contents($tmp_img)
+			// 	)
+			// ));
+			// echo json_encode($response);
 			// echo (json_encode($response));
 			unlink($tmp_img);
 			// 处理响应错误情况
@@ -744,7 +772,7 @@ class Pixcut_Remove_BG_Admin
 	{
 		global $wpdb;
 		if (wp_verify_nonce(sanitize_text_field($_POST['_nonce']), 'update-options')  && user_can(intval($_POST['schk']), 'edit_pages')) {
-			$sql = "SELECT * FROM `" . $wpdb->prefix . "wc_pixcut_remove_bg` WHERE status='s' or status='r' ";
+			$sql = "SELECT * FROM `" . $wpdb->prefix . "wc_pixcut_remove_bg` WHERE status='start' or status='ready' ";
 			$res = $wpdb->get_results($sql);
 			if (empty($res[0])) {
 				//buckup list
@@ -777,7 +805,7 @@ class Pixcut_Remove_BG_Admin
 			echo json_encode(array(
 				'hasErrors'  => true,
 				'processing' => false,
-				'status'     => 'e',
+				'status'     => 'error',
 				'error_msg'  => __('One-time password is not correct. Refresh the page and try again.', 'pixcut-remove-bg')
 			));
 		}
@@ -824,7 +852,7 @@ class Pixcut_Remove_BG_Admin
 			echo json_encode(array(
 				'hasErrors'  => true,
 				'processing' => false,
-				'status'     => 'e',
+				'status'     => 'error',
 				'error_msg'  => __('One-time password is not correct. Refresh the page and try again.', 'pixcut-remove-bg')
 			));
 		}
@@ -841,7 +869,7 @@ class Pixcut_Remove_BG_Admin
 					$wpdb->prefix . "wc_pixcut_remove_bg",
 					array(
 						'date_end'  => date('Y-m-d H:i:s'),
-						'status'    => 'f',
+						'status'    => 'finish',
 						'error_msg' => __('User aborted', 'pixcut-remove-bg')
 					),
 					array(
@@ -870,7 +898,7 @@ class Pixcut_Remove_BG_Admin
 			echo json_encode(array(
 				'hasErrors'  => true,
 				'processing' => false,
-				'status'     => 'e',
+				'status'     => 'error',
 				'error_msg'  => __('One-time password is not correct. Refresh the page and try again.', 'pixcut-remove-bg')
 			));
 		}
@@ -981,7 +1009,7 @@ class Pixcut_Remove_BG_Admin
 			echo json_encode(array(
 				'hasErrors'  => true,
 				'processing' => false,
-				'status'     => 'e',
+				'status'     => 'error',
 				'error_msg'  => __('One-time password is not correct. Refresh the page and try again.', 'pixcut-remove-bg')
 			));
 		}
@@ -1000,7 +1028,7 @@ class Pixcut_Remove_BG_Admin
 				$wpdb->prefix . "wc_pixcut_remove_bg",
 				array(
 					'date_end'  => date('Y-m-d H:i:s'),
-					'status'    => 'e',
+					'status'    => 'error',
 					'error_msg' => $errors_msg
 				),
 				array(

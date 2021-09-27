@@ -1,5 +1,36 @@
 (function ($) {
   $(document).ready(function () {
+    function showModel(desc, confirmCallback, succAction) {
+      $("#model").show();
+      $("#modelDesc").text(desc);
+      if (confirmCallback) {
+        console.log($(".model-action .btn")[0].css);
+        $("#cancelAction").css("display", "block");
+      }
+      $(".model-action .btn")[0].addEventListener("click", function () {
+        $("#model").hide();
+      });
+      $(".model-action .btn")[1].addEventListener("click", function () {
+        if (succAction) {
+          succAction();
+          $("#model").hide();
+          return;
+        }
+        if (confirmCallback) confirmCallback();
+        $("#model").hide();
+      });
+    }
+    function showToast(info, type) {
+      const typeString = type === "success" ? "notice-success" : type === "info" ? "notice-info" : "error-info";
+      $(".pixcut_remove_bg").hide();
+      $(`.pixcut_remove_bg#${typeString}`).show();
+      $(`.pixcut_remove_bg#${typeString} p`).html(info);
+      $("html, body").animate({ scrollTop: 0 }, "slow");
+
+      $("#loader").hide();
+      $("p.submit").show();
+    }
+
     var ajaxQueue = $({});
     var processing = true;
 
@@ -34,7 +65,6 @@
 
     //We add to processing a new picture with data to which post it belongs. The queue will be synchronous.
     function processQueue(post, image, thumb, gallery, currentProcessing, allProcessing, last, remove_bg_id) {
-      console.log($('input[name="Pixcut_RemoveBG_Include_Processed"]:checked').val());
       $.ajaxQueue({
         type: "post",
         dataType: "json",
@@ -57,25 +87,21 @@
           Pixcut_RemoveBG_Include_Processed: $('input[name="Pixcut_RemoveBG_Include_Processed"]:checked').val() || false,
           Pixcut_RemoveBG_Background: $('input[name="Pixcut_RemoveBG_Background"]:checked').val(),
           Pixcut_RemoveBG_Background_Color: $('input[name="Pixcut_RemoveBG_Background_Color"]').val(),
-          //   Pixcut_RemoveBG_Background_fit_fill: $('input[name="RemoveBG_Background_fit_fill"]:checked').val(),
           Pixcut_RemoveBG_ID: remove_bg_id,
           schk: $("input#schk").val(),
           _nonce: $("#_wpnonce").val(),
         },
         success: function (data) {
           if (data.hasErrors == true) {
-            if (data.error_msg === "Credit not enough") {
+            if (data.error_msg === "Error: CREDIT_NOT_ENOUGH") {
+              // TODO 后续任务直接弹出
               showModel("Credit not enough", null, function () {
-                window.open("https://pixcut.wondershare.com/pricing.html", "_blank");
+                window.open("https://pixcut.wondershare.com/pricing.html");
               });
+              $('#loader').hide();
+              $('p.submit').show();
             } else {
-              $(".pixcut_remove_bg").hide();
-              $("#status_restore_e").show();
-              $("#status_restore_e p").html(data.error_msg + " (" + $(".pixcut_remove_bg-log").html() + ")");
-              $("html, body").animate({ scrollTop: 0 }, "slow");
-
-              $("#loader").hide();
-              $("p.submit").show();
+              showToast(data.error_msg+" " + $(".pixcut_remove_bg-log").html() );
             }
 
             ajaxQueue = $({});
@@ -90,7 +116,7 @@
               if (processing !== false) {
                 $(".pixcut_remove_bg-log-live")
                   .show()
-                  .html(data.success_msg + " (" + $(".pixcut_remove_bg-log").html() + ")");
+                  .html(data.success_msg + "  " + $(".pixcut_remove_bg-log").html() );
                 $(".pixcut_remove_bg-process-stop").show().attr("data-id", remove_bg_id);
                 $("html,body").animate(
                   {
@@ -101,14 +127,10 @@
               }
             }
             if (last) {
-              $(".pixcut_remove_bg").hide();
-              $(".pixcut_remove_bg#status_s").show();
-              $(".pixcut_remove_bg#status_s p").html(data.success_msg + " (" + $(".pixcut_remove_bg-log").html() + ")");
-              $("html, body").animate({ scrollTop: 0 }, "slow");
+              showToast(data.success_msg + "  " + $(".pixcut_remove_bg-log").html(), "success");
+
               $(".pixcut_remove_bg-log-live").hide();
               $(".pixcut_remove_bg-process-stop").hide().attr("data-id", 0);
-              $("#loader").hide();
-              $("p.submit").show();
               $(".block-count").show();
             }
           }
@@ -118,7 +140,6 @@
       return true;
     }
 
-    // $('input[name="Pixcut_RemoveBG_Background_Color"]').wpColorPicker();
     if ($('input[name="Pixcut_RemoveBG_Background"]:checked').val() == "color") $("#background_color").show();
     else $("#background_color").hide();
 
@@ -140,8 +161,10 @@
         start_r = true;
       if (btn.hasClass("startRemove")) {
         process = "start_queue"; //'new';
-        $(".pixcut_remove_bg#status_w").show();
-        $("#process_status").val("w");
+
+        $(`.pixcut_remove_bg#notice-info`).show();
+        $(`.pixcut_remove_bg#notice-info p`).html("Background removal is in progress.");
+        $(".pixcut_remove_bg#remove-ing").show();
       }
       if (btn.hasClass("saveSetting")) {
         process = "save";
@@ -212,41 +235,26 @@
                   } else {
                     ajaxQueue = $({});
                     processing = false;
-                    $("html, body").animate({ scrollTop: 0 }, "slow");
-                    $("#status_restore_e").show();
-                    $("#status_restore_e p").text($("#alert-text-no-images").val());
-                    $("#loader").hide();
-                    $("p.submit").show();
+                    showToast($("#alert-text-no-images").val());
                   }
                 }
                 if (data.hasErrors == true) {
                   ajaxQueue = $({});
                   processing = false;
-                  $("html, body").animate({ scrollTop: 0 }, "slow");
-                  $("#status_restore_e").show();
-                  $("#status_restore_e p").text(data.error_msg);
-                  $("#loader").hide();
-                  $("p.submit").show();
+                  showToast(data.error_msg);
                 }
               }
               if (process == "save") {
+                showToast("Settings have been saved.", "success");
                 if ($('input[name="Pixcut_RemoveBG_ApiKey"]').val() != "") {
                   $("#appkeyWarning").hide();
                 } else {
                   $("#appkeyWarning").show();
                 }
-                $("html, body").animate({ scrollTop: 0 }, "slow");
-                $("#status_s").show();
-                $("#loader").hide();
-                $("p.submit").show();
               }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-              $("html, body").animate({ scrollTop: 0 }, "slow");
-              $("#status_restore_e").show();
-              $("#status_restore_e p").text(textStatus + " " + errorThrown);
-              $("#loader").hide();
-              $("p.submit").show();
+              showToast(textStatus + " " + errorThrown);
             },
           });
         } else {
@@ -265,7 +273,6 @@
       processing = false;
       $("#loader").hide();
       $("p.submit").show();
-      $(".RemoveBG_Background_img").attr("src", "").css("display", "block");
       $(".pixcut_remove_bg-log-live").hide();
       $(".pixcut_remove_bg-process-stop").hide();
 
@@ -282,23 +289,14 @@
         success: function (data) {
           $("html, body").animate({ scrollTop: 0 }, "slow");
           if (data.hasErrors) {
-            $("#status_restore_w").hide();
-            $("#status_restore_e").show();
-            $("#status_restore_e p").text(data.msg);
+            showToast(data.msg)
           } else {
-            $("#status_restore_w").hide();
-            $("#status_restore_d").show();
-            $("#status_restore_d p").text(data.msg);
+           
+            showToast(data.msg,'success')
           }
-          $("#loader").hide();
-          $("p.submit").show();
         },
         error: function (jqXHR, textStatus, errorThrown) {
-          $("html, body").animate({ scrollTop: 0 }, "slow");
-          $("#status_restore_e").show();
-          $("#status_restore_e p").text(textStatus + " " + errorThrown);
-          $("#loader").hide();
-          $("p.submit").show();
+          showToast(textStatus + " " + errorThrown);
         },
       });
     });
@@ -306,13 +304,10 @@
     $("#pixcut_restore_backup").on("click", function (e) {
       e.preventDefault();
       showModel($("#restore_backup_confirm").val(), function () {
+        showToast('Restore is in progress.','info')
         $("#loader").show();
         $("#previewresult").hide();
         $("p.submit").hide();
-        $(".pixcut_remove_bg.notice").hide();
-        $("#status_restore_w").show();
-        $("#status_restore_e").hide();
-        $("#status_restore_d").hide();
         $.ajax({
           type: "post",
           dataType: "json",
@@ -325,24 +320,16 @@
           success: function (data) {
             $("html, body").animate({ scrollTop: 0 }, "slow");
             if (data.hasErrors) {
-              $("#status_restore_w").hide();
-              $("#status_restore_e").show();
-              $("#status_restore_e p").text(data.msg);
+              showToast(data.msg);
             } else {
-              $("#status_restore_w").hide();
+              showToast('Restore complete.', "success");
               $(".block-count").hide();
-              $("#status_restore_d").show();
-              $(".pixcut-button-click").addClass("d-none");
+              $("#pixcut_restore_backup").addClass("d-none");
+              $("#pixcut_delete_backup").addClass("d-none");
             }
-            $("#loader").hide();
-            $("p.submit").show();
           },
           error: function (jqXHR, textStatus, errorThrown) {
-            $("html, body").animate({ scrollTop: 0 }, "slow");
-            $("#status_restore_e").show();
-            $("#status_restore_e p").text(textStatus + " " + errorThrown);
-            $("#loader").hide();
-            $("p.submit").show();
+            showToast(textStatus + " " + errorThrown);
           },
         });
       });
@@ -367,27 +354,17 @@
             schk: $("input#schk").val(),
           },
           success: function (data) {
-            $("html, body").animate({ scrollTop: 0 }, "slow");
             if (data.hasErrors) {
-              $("#status_restore_w").hide();
-              $("#status_restore_e").show();
-              $("#status_restore_e p").text(data.msg);
+              showToast(data.msg);
             } else {
-              $(".pixcut-button-click").addClass("d-none");
+              showToast(data.msg, "success");
               $(".block-count").hide();
-              $("#status_restore_w").hide();
-              $("#status_d").show();
-              $("#status_d p").text(data.msg);
+              $("#pixcut_restore_backup").addClass("d-none");
+              $("#pixcut_delete_backup").addClass("d-none");
             }
-            $("#loader").hide();
-            $("p.submit").show();
           },
           error: function (jqXHR, textStatus, errorThrown) {
-            $("html, body").animate({ scrollTop: 0 }, "slow");
-            $("#status_restore_e").show();
-            $("#status_restore_e p").text(textStatus + " " + errorThrown);
-            $("#loader").hide();
-            $("p.submit").show();
+            showToast(textStatus + " " + errorThrown);
           },
         });
       });
@@ -422,26 +399,18 @@
         data: form_data,
         success: function (data) {
           if (data.hasErrors) {
-            $("html, body").animate({ scrollTop: 0 }, "slow");
-            $("#status_restore_w").hide();
-            $("#status_restore_e").show();
-            $("#status_restore_e p").text(data.msg);
+            showToast(data.msg);
           } else {
             $(".img-after-remove-bg").attr("src", data.file_after);
             $(".img-before-remove-bg").attr("src", data.file_before);
             $("#previewresult").css("display", "flex");
             $('input[name="Pixcut_RemoveBG_TestProduct"]').val("");
+            $("#loader").hide();
+            $("p.submit").show();
           }
-
-          $("#loader").hide();
-          $("p.submit").show();
         },
         error: function (jqXHR, textStatus, errorThrown) {
-          $("html, body").animate({ scrollTop: 0 }, "slow");
-          $("#status_restore_e").show();
-          $("#status_restore_e p").text(textStatus + " " + errorThrown);
-          $("#loader").hide();
-          $("p.submit").show();
+          showToast(textStatus + " " + errorThrown);
         },
       });
     });
@@ -455,23 +424,4 @@
       });
     }
   });
-  function showModel(desc, confirmCallback, succAction) {
-    $("#model").show();
-    $("#modelDesc").text(desc);
-    if (confirmCallback) {
-      console.log($(".model-action .btn")[0].css);
-      $("#cancelAction").css("display", "block");
-    }
-    $(".model-action .btn")[0].addEventListener("click", function () {
-      $("#model").hide();
-    });
-    $(".model-action .btn")[1].addEventListener("click", function () {
-      if (succAction) {
-        succAction();
-        return;
-      }
-      if (confirmCallback) confirmCallback();
-      $("#model").hide();
-    });
-  }
 })(jQuery);

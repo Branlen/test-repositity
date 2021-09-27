@@ -13,22 +13,13 @@
  */
 
 ?>
-<div class="pixcut_remove_bg notice notice-info is-dismissible" id="status_w" style="display: none">
-    <p>Background removal is in progress.</p>
+<div class="pixcut_remove_bg notice notice-info is-dismissible" id="notice-info" style="display: none">
+    <p></p>
 </div>
-<div class="pixcut_remove_bg notice notice-success is-dismissible" id="status_d" style="display: none">
-    <p>Background removal complete.</p>
+<div class="pixcut_remove_bg notice notice-success is-dismissible" id="notice-success" style="display: none">
+    <p></p>
 </div>
-<div class="pixcut_remove_bg notice notice-success is-dismissible" id="status_s" style="display: none">
-    <p>Settings have been saved.</p>
-</div>
-<div class="pixcut_remove_bg notice notice-info is-dismissible" id="status_restore_w" style="display: none">
-    <p>Restore is in progress.</p>
-</div>
-<div class="pixcut_remove_bg notice notice-success is-dismissible" id="status_restore_d" style="display: none">
-    <p>Restore complete.</p>
-</div>
-<div class="pixcut_remove_bg notice notice-error is-dismissible" id="status_restore_e" style="display: none">
+<div class="pixcut_remove_bg notice notice-error is-dismissible" id="error-info" style="display: none">
     <p></p>
 </div>
 

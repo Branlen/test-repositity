@@ -75,14 +75,13 @@ function run_pixcut_remove_bg() {
 }
 run_pixcut_remove_bg();
 
-//TODO
 add_filter( 'plugin_row_meta', 'pixcut_support_and_contact_links', 10, 4 );
 function pixcut_support_and_contact_links( $links_array, $plugin_file_name, $plugin_data, $status )
 {
 
   if( strpos( $plugin_file_name, basename(__FILE__) ))
   {
-    $links_array[] = 'Support: support@slazzer.com';
+    $links_array[] = 'Support: pixcut@wondershare.com';
   }
  
   return $links_array;

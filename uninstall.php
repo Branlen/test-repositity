@@ -22,7 +22,7 @@
  * @link       http://fresh-d.biz/wocommerce-remove-background.html
  * @since      1.0.0
  *
- * @package    wc-remove-bg
+ * @package    pixcut-remove-bg
  */
 
 // If uninstall not called from WordPress, then exit.
