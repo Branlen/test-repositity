@@ -35,7 +35,7 @@ $removeBG_include_processed = get_option('Pixcut_RemoveBG_Include_Processed');
 ?>
 
 <div class="pixcut-wrap px-4">
-    <div class="mt-4 d-flex align-items-center justify-content-between pr-5">
+    <div class="mt-4 d-flex align-items-center justify-content-between pr-2">
         <span class="d-flex align-items-center "> <img src="https://neveragain.allstatics.com/2019/assets/icon/logo/pixcut-square.svg" class="mr-2" alt="PixCut Logo icon" style="width: 32px; height: 32px;">
             <h2>Wocommerce Pixcut remove background</h2>
         </span>
@@ -142,7 +142,7 @@ $removeBG_include_processed = get_option('Pixcut_RemoveBG_Include_Processed');
                 <td>
 
                     <div class="table-content">
-                        <input type="radio" id="newbg_transp" name="Pixcut_RemoveBG_Background" value="transparent " <?php echo checked(('transparent' == $background_option || 'color' != $background_option ), true, false) ?> /><label for="newbg_transp">Transparent</label><br>
+                        <input type="radio" id="newbg_transp" name="Pixcut_RemoveBG_Background" value="transparent " <?php echo checked(('transparent' == $background_option || 'color' != $background_option), true, false) ?> /><label for="newbg_transp">Transparent</label><br>
                         <!-- <div style="height:10px"></div> -->
                         <input type="radio" id="newbg_color" name="Pixcut_RemoveBG_Background" value="color" <?php echo checked('color' == $background_option, true, false) ?> /><label for="newbg_color" style="height: 27px;line-height: 27px;"> Color </label>
 
@@ -175,8 +175,8 @@ $removeBG_include_processed = get_option('Pixcut_RemoveBG_Include_Processed');
                 </td>
             </tr>
         </table>
-        <div id="loader">
-
+        <div class="block-count" <?php if ($count == 0) { ?>style="display:none;" <?php } ?>> Images backed up - <?php echo '<strong>' . $count . ' </strong>'; ?> images</div>
+        <div id="loader" class="mt-2">
             <div class="loader-inner line-scale-pulse-out">
                 <div></div>
                 <div></div>
@@ -184,23 +184,22 @@ $removeBG_include_processed = get_option('Pixcut_RemoveBG_Include_Processed');
                 <div></div>
                 <div></div>
             </div>
-
         </div>
-        <p class="submit">
+        <p class="submit mt-2">
             <input type="submit" class="btn btn-success button-primary saveSetting pixcut-button-click mr-4" value="Save settings" />
             <input type="submit" class="btn btn-primary button-primary startRemove pixcut-button-click mr-4" value="Start background removal" />
-
+            
             <input type="submit" class="btn btn-warning pixcut-button-click  mr-4 <?php if ($count == 0) { ?>d-none<?php } ?> " id="pixcut_restore_backup" value="Restore backup" />
             <input type="submit" class="btn btn-danger pixcut-button-click mr-4 <?php if ($count == 0) { ?>d-none<?php } ?> " id="pixcut_delete_backup" value="Delete backup" />
             <input type="hidden" id="restore_backup_confirm" value="This will restore your original images. Do you want to continue?">
             <input type="hidden" id="delete_backup_confirm" value="This will permanently delete your original images. Do you want to continue?">
-        <div class="block-count" <?php if ($count == 0) { ?>style="display:none;" <?php } ?>> Images backed up - <?php echo '<span>' . $count . '</span>'; ?></div>
         </p>
-        <div class="pixcut_remove_bg-log-live">
-
-        </div>
-        <div class="pixcut_remove_bg-process-stop btn btn-danger d-none">
-            Abort process
+        
+        <div class="d-flex align-items-center" >
+            <div class="pixcut_remove_bg-log-live mr-4" ></div>
+            <div class="pixcut_remove_bg-process-stop btn btn-danger d-none">
+                Abort process
+            </div>
         </div>
         <div class="pixcut_remove_bg-log mt-2" <?php echo !$log_file ? 'style="display: none"' : ''; ?>>
             <a class="btn btn-secondary" href="<?php echo $wp_upload_dir['baseurl']; ?>/pixcut-remove-bg-log/log.txt" target="_blank">View last log</a>

@@ -31,111 +31,120 @@
       $("p.submit").show();
     }
 
-    var ajaxQueue = $({});
-    var processing = true;
-
-    //Ajax queue requests. Used for synchronous transfer of pictures for processing.
-    $.ajaxQueue = function (ajaxOpts) {
-      // Hold the original complete function
-      var oldComplete = ajaxOpts.complete;
-
-      // Queue our ajax request
-      ajaxQueue.queue(function (next) {
-        // Create a complete callback to invoke the next event in the queue
-        ajaxOpts.complete = function () {
-          // Invoke the original complete if it was there
-          if (oldComplete) {
-            oldComplete.apply(this, arguments);
-          }
-
-          // Run the next query in the queue
-          if (processing) {
-            next();
-          } else {
-            processing = true;
-          }
-        };
-
-        // Run the query
-        if (processing) {
-          $.ajax(ajaxOpts);
-        }
-      });
+    function QueueClass() {
+      this.queue = [];
+      this.isClose = false;
+      this.ajaxInstance = null;
+    }
+    QueueClass.prototype.add = function (work) {
+      this.queue.push(work);
+      if (this.isClose) {
+        return;
+      }
+      this.handle();
     };
 
+    QueueClass.prototype.handle = function () {
+      if (this.queue.length <= 0) {
+        return;
+      }
+      const work = this.queue.shift();
+      if (work) {
+        this.isClose = true;
+        // 下一步控制权交给jobs
+        this.ajaxInstance = work(this.nextStep.bind(this));
+      }
+    };
+    QueueClass.prototype.nextStep = function () {
+      this.isClose = false;
+      // 查看是否有任务
+      this.handle();
+    };
+
+    QueueClass.prototype.abort = function () {
+      this.queue = [];
+      this.isClose = false;
+      if (this.ajaxInstance) this.ajaxInstance.abort();
+    };
+    QueueClass.prototype.isProcessing = function () {
+      return !!this.isClose;
+    };
+    const ajaxQueueInstance = new QueueClass();
     //We add to processing a new picture with data to which post it belongs. The queue will be synchronous.
     function processQueue(post, image, thumb, gallery, currentProcessing, allProcessing, last, remove_bg_id) {
-      $.ajaxQueue({
-        type: "post",
-        dataType: "json",
-        url: ajaxurl,
-        data: {
-          action: "Pixcut_Remove_BG_processing",
-          process: "processing_queue",
-          Pixcut_RemoveBG_NextPost: post,
-          Pixcut_RemoveBG_NextImage: image,
-          Pixcut_RemoveBG_NextImageThumb: thumb,
-          Pixcut_RemoveBG_NextImageGallery: gallery,
-          Pixcut_RemoveBG_CountProcessImage: currentProcessing,
-          Pixcut_RemoveBG_AllCountImage: allProcessing,
-          Pixcut_RemoveBG_LastImage: last,
-          Pixcut_RemoveBG_ApiKey: $('input[name="Pixcut_RemoveBG_ApiKey"]').val(),
-          Pixcut_RemoveBG_products: $('input[name="Pixcut_RemoveBG_products"]:checked').val(),
-          Pixcut_RemoveBG_products_IDs: $('input[name="Pixcut_RemoveBG_products_IDs"]').val(),
-          Pixcut_RemoveBG_thumbnail: $('input[name="Pixcut_RemoveBG_thumbnail"]:checked').val(),
-          Pixcut_RemoveBG_gallery: $('input[name="Pixcut_RemoveBG_gallery"]:checked').val(),
-          Pixcut_RemoveBG_Include_Processed: $('input[name="Pixcut_RemoveBG_Include_Processed"]:checked').val() || false,
-          Pixcut_RemoveBG_Background: $('input[name="Pixcut_RemoveBG_Background"]:checked').val(),
-          Pixcut_RemoveBG_Background_Color: $('input[name="Pixcut_RemoveBG_Background_Color"]').val(),
-          Pixcut_RemoveBG_ID: remove_bg_id,
-          schk: $("input#schk").val(),
-          _nonce: $("#_wpnonce").val(),
-        },
-        success: function (data) {
-          if (data.hasErrors == true) {
-            if (data.error_msg === "Error: CREDIT_NOT_ENOUGH") {
-              // TODO 后续任务直接弹出
-              showModel("Credit not enough", null, function () {
-                window.open("https://pixcut.wondershare.com/pricing.html");
-              });
-              $('#loader').hide();
-              $('p.submit').show();
-            } else {
-              showToast(data.error_msg+" " + $(".pixcut_remove_bg-log").html() );
-            }
-
-            ajaxQueue = $({});
-            processing = false;
-          } else {
-            if (currentProcessing > 0) {
-              $(".pixcut-button-click").removeClass("d-none");
-              $(".block-count span").html(currentProcessing);
-            }
-            // $(".RemoveBG_Background_img").attr("src", "").css("display", "none");
-            if (data.success_msg != "") {
-              if (processing !== false) {
-                $(".pixcut_remove_bg-log-live")
-                  .show()
-                  .html(data.success_msg + "  " + $(".pixcut_remove_bg-log").html() );
-                $(".pixcut_remove_bg-process-stop").show().attr("data-id", remove_bg_id);
-                $("html,body").animate(
-                  {
-                    scrollTop: $(".pixcut_remove_bg-log-live").offset().top,
-                  },
-                  "slow"
-                );
+      ajaxQueueInstance.add(function (nextStep) {
+        return $.ajax({
+          type: "post",
+          dataType: "json",
+          url: ajaxurl,
+          data: {
+            action: "Pixcut_Remove_BG_processing",
+            process: "processing_queue",
+            Pixcut_RemoveBG_NextPost: post,
+            Pixcut_RemoveBG_NextImage: image,
+            Pixcut_RemoveBG_NextImageThumb: thumb,
+            Pixcut_RemoveBG_NextImageGallery: gallery,
+            Pixcut_RemoveBG_CountProcessImage: currentProcessing,
+            Pixcut_RemoveBG_AllCountImage: allProcessing,
+            Pixcut_RemoveBG_LastImage: last,
+            Pixcut_RemoveBG_ApiKey: $('input[name="Pixcut_RemoveBG_ApiKey"]').val(),
+            Pixcut_RemoveBG_products: $('input[name="Pixcut_RemoveBG_products"]:checked').val(),
+            Pixcut_RemoveBG_products_IDs: $('input[name="Pixcut_RemoveBG_products_IDs"]').val(),
+            Pixcut_RemoveBG_thumbnail: $('input[name="Pixcut_RemoveBG_thumbnail"]:checked').val(),
+            Pixcut_RemoveBG_gallery: $('input[name="Pixcut_RemoveBG_gallery"]:checked').val(),
+            Pixcut_RemoveBG_Include_Processed: $('input[name="Pixcut_RemoveBG_Include_Processed"]:checked').val() || false,
+            Pixcut_RemoveBG_Background: $('input[name="Pixcut_RemoveBG_Background"]:checked').val(),
+            Pixcut_RemoveBG_Background_Color: $('input[name="Pixcut_RemoveBG_Background_Color"]').val(),
+            Pixcut_RemoveBG_ID: remove_bg_id,
+            schk: $("input#schk").val(),
+            _nonce: $("#_wpnonce").val(),
+          },
+          success: function (data) {
+            if (data.hasErrors == true) {
+              if (data.error_msg === "Error: CREDIT_NOT_ENOUGH") {
+                showModel("Credit not enough", null, function () {
+                  window.open("https://pixcut.wondershare.com/pricing.html");
+                });
+                $("#loader").hide();
+                $("p.submit").show();
+              } else {
+                showToast(data.error_msg + " " + $(".pixcut_remove_bg-log").html());
               }
-            }
-            if (last) {
-              showToast(data.success_msg + "  " + $(".pixcut_remove_bg-log").html(), "success");
-
+              
               $(".pixcut_remove_bg-log-live").hide();
               $(".pixcut_remove_bg-process-stop").hide().attr("data-id", 0);
-              $(".block-count").show();
+              // not do next step
+            } else {
+              if (currentProcessing > 0) {
+                $(".pixcut-button-click").removeClass("d-none");
+                $(".block-count span").html(currentProcessing);
+              }
+              // $(".RemoveBG_Background_img").attr("src", "").css("display", "none");
+              if (data.success_msg != "") {
+                if (ajaxQueueInstance.isProcessing()) {
+                  $(".pixcut_remove_bg-log-live")
+                    .show()
+                    .html(data.success_msg );
+                  $(".pixcut_remove_bg-process-stop").show().attr("data-id", remove_bg_id);
+                  $("html,body").animate(
+                    {
+                      scrollTop: $(".pixcut_remove_bg-log-live").offset().top,
+                    },
+                    "slow"
+                  );
+                }
+              }
+              if (last) {
+                showToast(data.success_msg, "success");
+
+                $(".pixcut_remove_bg-log-live").hide();
+                $(".pixcut_remove_bg-process-stop").hide().attr("data-id", 0);
+                $(".block-count").show();
+              }
+              nextStep();
             }
-          }
-          return true;
-        },
+          },
+        });
       });
       return true;
     }
@@ -219,6 +228,16 @@
                   var arrayPostJson = $.parseJSON(arrayPost);
                   var countGenerateImage = $(arrayPostJson).length;
                   if (countGenerateImage > 0) {
+                    $(".pixcut_remove_bg-log-live")
+                      .show()
+                      .html("Processed 0 images of " + countGenerateImage);
+                    $(".pixcut_remove_bg-process-stop").show().attr("data-id", data.remove_bg);
+                    $("html,body").animate(
+                      {
+                        scrollTop: $(".pixcut_remove_bg-log-live").offset().top,
+                      },
+                      "slow"
+                    );
                     $(arrayPostJson).each(function (item, res) {
                       var iteration = item + 1;
                       processQueue(
@@ -233,14 +252,12 @@
                       );
                     });
                   } else {
-                    ajaxQueue = $({});
-                    processing = false;
+                    ajaxQueueInstance.abort();
                     showToast($("#alert-text-no-images").val());
                   }
                 }
                 if (data.hasErrors == true) {
-                  ajaxQueue = $({});
-                  processing = false;
+                  ajaxQueueInstance.abort();
                   showToast(data.error_msg);
                 }
               }
@@ -269,8 +286,7 @@
 
     $(".pixcut_remove_bg-process-stop").on("click", function (e) {
       e.preventDefault();
-      ajaxQueue = $({});
-      processing = false;
+      ajaxQueueInstance.abort();
       $("#loader").hide();
       $("p.submit").show();
       $(".pixcut_remove_bg-log-live").hide();
@@ -289,10 +305,9 @@
         success: function (data) {
           $("html, body").animate({ scrollTop: 0 }, "slow");
           if (data.hasErrors) {
-            showToast(data.msg)
+            showToast(data.msg);
           } else {
-           
-            showToast(data.msg,'success')
+            showToast(data.msg, "success");
           }
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -304,7 +319,7 @@
     $("#pixcut_restore_backup").on("click", function (e) {
       e.preventDefault();
       showModel($("#restore_backup_confirm").val(), function () {
-        showToast('Restore is in progress.','info')
+        showToast("Restore is in progress.", "info");
         $("#loader").show();
         $("#previewresult").hide();
         $("p.submit").hide();
@@ -322,7 +337,7 @@
             if (data.hasErrors) {
               showToast(data.msg);
             } else {
-              showToast('Restore complete.', "success");
+              showToast("Restore complete.", "success");
               $(".block-count").hide();
               $("#pixcut_restore_backup").addClass("d-none");
               $("#pixcut_delete_backup").addClass("d-none");
