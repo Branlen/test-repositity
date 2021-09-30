@@ -18,7 +18,7 @@
  * @since      1.0.0
  * @package     Pixcut_Remove_BG
  * @subpackage  Pixcut_Remove_BG/includes
- * @author     Pixcut Developers <developers@pixcut.com>
+ * @author     Pixcut Developers <pixcut@wondershare.com>
  */
 class Pixcut_Remove_BG_Activator
 {

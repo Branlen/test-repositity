@@ -96,7 +96,7 @@ $removeBG_include_processed = get_option('Pixcut_RemoveBG_Include_Processed');
                     <div class="table-content">
                         <input type="radio" id="products_all" name="Pixcut_RemoveBG_products" value="all" <?php echo checked(('all' == $removeBG_products || 'specified' != $removeBG_products), true, false) ?> /><label for="products_all">Remove background from all products</label><br>
                         <input type="radio" id="products_spec" name="Pixcut_RemoveBG_products" value="specified" <?php echo checked('specified' == $removeBG_products, true, false) ?> /><label for="products_spec">Remove background only from specified products </label><span class="desc">&nbsp; (IDs of products to process: comma separated or ranges, i.e. 3,9,20-27,40-45)</span>
-                        <input type="text" class="input  mt-2" style="width: 60%;" <?php if ('specified' != $removeBG_products) echo ' readonly disable'; ?> placeholder="4,156,271" name="Pixcut_RemoveBG_products_IDs" value="<?php echo esc_attr($removeBG_productsIds) ?>" />
+                        <input type="text" class="input  mt-2" style="width: 60%;"  placeholder="4,156,271" name="Pixcut_RemoveBG_products_IDs" value="<?php echo esc_attr($removeBG_productsIds) ?>" />
                     </div>
                 </td>
             </tr>
